@@ -15,14 +15,14 @@ import android.util.Log;
 import androidx.annotation.Nullable;
 
 // -------------------------------------------------------------------------------------------------
+// @author: Arnau Soler Tomás
+// Clase: ServicioEscuharBeacons
+// Descripción: Servicio que nos srive para detectar y mostrar los beacons BTLE
 // -------------------------------------------------------------------------------------------------
 public class ServicioEscuharBeacons extends IntentService {
 
     //Constantes y Variables Globales
     private static final String ETIQUETA_LOG = ">>>>";
-    private static final String nombreABuscar = "GTI-PROY-3A-ARNAU";
-
-    //private static final String ALL_BEACONS_REGION = "AllBeaconsRegion";
     private long tiempoDeEspera = 10000;
     private boolean seguir = true;
 
@@ -35,6 +35,11 @@ public class ServicioEscuharBeacons extends IntentService {
     private final Handler handler = new Handler();
     // Stops scanning after 10 seconds.
     private static final long SCAN_PERIOD = 10000;
+    //private String uuidABuscar="45505347-2d47-5449-2d50-524f592d3341"; //Nuestra UUID
+    //private String uuidABuscar="45505347-2d47-5449-2d50-524f592d3341"; //Charlie UUID
+    //private String uuidABuscar="45:50:53:47:47:54:49:2d:43:52:49:53:54:49:41:4e:"; //Cristian UUID
+    //private String uuidABuscar="45505347-2d47-5449-2d50-524f592d3341"; //Arduino UUID
+    private final String uuidABuscar="44:29:2d:55:41:52:54:02:01:05:0f:09:41:50:36:38:"; //Test UUID
 
     @Override
     public void onStart(@Nullable Intent intent, int startId) {
@@ -64,12 +69,12 @@ public class ServicioEscuharBeacons extends IntentService {
         Log.d(ETIQUETA_LOG,"ServicioEscucharBeacons.parar()");
 
 
-        if (this.seguir == false){
+        if (!this.seguir){
             return;
         }
 
         this.seguir = false;
-        this.detenerBusquedaDispositivosBTLE();
+        //this.detenerBusquedaDispositivosBTLE();
         this.stopSelf();
 
         Log.d(ETIQUETA_LOG,"ServicioEscucharBeacons.parar() : acaba");
@@ -83,7 +88,7 @@ public class ServicioEscuharBeacons extends IntentService {
     public void onDestroy() {
 
         Log.d(ETIQUETA_LOG,"ServicioEscucharBeacons.onDestroy()");
-
+        this.detenerBusquedaDispositivosBTLE();
         this.parar(); //posiblemente no haga falta, si stopService() ya se carga el servicio y su worker thread
     }
     // ---------------------------------------------------------------------------------------------
@@ -119,51 +124,15 @@ public class ServicioEscuharBeacons extends IntentService {
         Log.d(ETIQUETA_LOG, " ServicioEscucharBeacons.onHandleItent: termina");
     }
 
-    // --------------------------------------------------------------
-    // --------------------------------------------------------------
+    // ---------------------------------------------------------------------------------------------
+    // buscarTodosLosDispositivosBTLE()
+    // Descripción: Método que sirve para buscar todos los dispositivos Bluetooth que hay cerca.
+    // En caso de haber alguno, llamaremos a mostrarInformacionDispositivoBTLE() para saber cual
+    // ---------------------------------------------------------------------------------------------
     @SuppressLint("MissingPermission")
     private void buscarTodosLosDispositivosBTLE() {
         Log.d(ETIQUETA_LOG, " buscarTodosLosDispositivosBTL(): empieza ");
         Log.d(ETIQUETA_LOG, " buscarTodosLosDispositivosBTL(): instalamos scan callback ");
-
-        /*
-        Esto por alguna razón, no va el ScanCallback
-
-        this.callbackDelEscaneo = new ScanCallback() {
-            @Override
-            public void onScanResult(int callbackType, ScanResult result) {
-                super.onScanResult(callbackType, result);
-                Log.d(ETIQUETA_LOG, " buscarTodosLosDispositivosBTL(): onScanResult() ");
-
-                mostrarInformacionDispositivoBTLE(result);
-            }
-
-            @Override
-            public void onBatchScanResults(List<ScanResult> results) {
-                super.onBatchScanResults(results);
-                Log.d(ETIQUETA_LOG, " buscarTodosLosDispositivosBTL(): onBatchScanResults() ");
-            }
-
-            @Override
-            public void onScanFailed(int errorCode) {
-                super.onScanFailed(errorCode);
-                Log.d(ETIQUETA_LOG, " buscarTodosLosDispositivosBTL(): onScanFailed() ");
-            }
-        };
-
-        Log.d(ETIQUETA_LOG, " buscarTodosLosDispositivosBTL(): empezamos a escanear ");
-
-        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return;
-        }
-         */
 
         ScanCallback leScanCallback = new ScanCallback() {
             @Override
@@ -176,13 +145,9 @@ public class ServicioEscuharBeacons extends IntentService {
 
         if (!scanning) {
             // Stops scanning after a predefined scan period.
-            handler.postDelayed(new Runnable() {
-                @SuppressLint("MissingPermission")
-                @Override
-                public void run() {
-                    scanning = false;
-                    elEscanner.stopScan(leScanCallback);
-                }
+            handler.postDelayed(() -> {
+                scanning = false;
+                elEscanner.stopScan(leScanCallback);
             }, SCAN_PERIOD);
 
             scanning = true;
@@ -198,8 +163,14 @@ public class ServicioEscuharBeacons extends IntentService {
 
     } // ()
 
-    // --------------------------------------------------------------
-    // --------------------------------------------------------------
+    // ---------------------------------------------------------------------------------------------
+    // ScanResult --> mostrarInformacionDispositivoBTLE()
+    // Descripción: Método que sirve para mostrar la información del dispositivo Bluetooth que se
+    // haya encontrado previamente con el método buscarTodosLosDispositivosBTLE
+    //
+    // A su vez, si el dispositivo emite un beacon con la UUID que queremos, llamaremos a un método
+    // para enviar la información al servidor mediante una consulta @POST
+    // ---------------------------------------------------------------------------------------------
     @SuppressLint("MissingPermission")
     private void mostrarInformacionDispositivoBTLE(ScanResult resultado) {
 
@@ -225,73 +196,44 @@ public class ServicioEscuharBeacons extends IntentService {
 
         TramaIBeacon tib = new TramaIBeacon(bytes);
 
+        String prefijo = Utilidades.bytesToHexString(tib.getPrefijo());
+        String uuid = Utilidades.bytesToHexString(tib.getUUID());
+        String major = Utilidades.bytesToHexString(tib.getMajor()) + "( " + Utilidades.bytesToInt(tib.getMajor()) + " ) ";
+        String minor = Utilidades.bytesToHexString(tib.getMinor()) + "( " + Utilidades.bytesToInt(tib.getMinor()) + " ) ";
+
         Log.d(ETIQUETA_LOG, " ----------------------------------------------------");
-        Log.d(ETIQUETA_LOG, " prefijo  = " + Utilidades.bytesToHexString(tib.getPrefijo()));
+        Log.d(ETIQUETA_LOG, " prefijo  = " + prefijo);
         Log.d(ETIQUETA_LOG, "          advFlags = " + Utilidades.bytesToHexString(tib.getAdvFlags()));
         Log.d(ETIQUETA_LOG, "          advHeader = " + Utilidades.bytesToHexString(tib.getAdvHeader()));
         Log.d(ETIQUETA_LOG, "          companyID = " + Utilidades.bytesToHexString(tib.getCompanyID()));
         Log.d(ETIQUETA_LOG, "          iBeacon type = " + Integer.toHexString(tib.getiBeaconType()));
         Log.d(ETIQUETA_LOG, "          iBeacon length 0x = " + Integer.toHexString(tib.getiBeaconLength()) + " ( "
                 + tib.getiBeaconLength() + " ) ");
-        Log.d(ETIQUETA_LOG, " uuid  = " + Utilidades.bytesToHexString(tib.getUUID()));
-        Log.d(ETIQUETA_LOG, " uuid  = " + Utilidades.bytesToString(tib.getUUID()));
-        Log.d(ETIQUETA_LOG, " major  = " + Utilidades.bytesToHexString(tib.getMajor()) + "( "
-                + Utilidades.bytesToInt(tib.getMajor()) + " ) ");
-        Log.d(ETIQUETA_LOG, " minor  = " + Utilidades.bytesToHexString(tib.getMinor()) + "( "
-                + Utilidades.bytesToInt(tib.getMinor()) + " ) ");
+        Log.d(ETIQUETA_LOG, " uuid  = " + uuid);
+        //Log.d(ETIQUETA_LOG, " uuid  = " + Utilidades.bytesToString(tib.getUUID()));
+        Log.d(ETIQUETA_LOG, " major  = " + major);
+        Log.d(ETIQUETA_LOG, " minor  = " + minor);
         Log.d(ETIQUETA_LOG, " txPower  = " + Integer.toHexString(tib.getTxPower()) + " ( " + tib.getTxPower() + " )");
         Log.d(ETIQUETA_LOG, " ****************************************************");
+
+        if (uuid.equals(uuidABuscar)){
+            Log.d("Busqueda", "Busqueda encontrada");
+            //Utilidades.iniciarPost(prefijo, uuid, major, minor);
+            Utilidades.enviarPOST(prefijo, uuid, major, minor);
+        }
 
     } // ()
 
     // --------------------------------------------------------------
-    // --------------------------------------------------------------
-
-    @SuppressLint("MissingPermission")
-    private void buscarNuestroBeacon(){
-        Log.d(ETIQUETA_LOG, " buscarTodosLosDispositivosBTL(): empieza ");
-        Log.d(ETIQUETA_LOG, " buscarTodosLosDispositivosBTL(): instalamos scan callback ");
-
-        ScanCallback leScanCallback = new ScanCallback() {
-            @Override
-            public void onScanResult(int callbackType, ScanResult result) {
-                super.onScanResult(callbackType, result);
-
-                if(result.getDevice().getName() == nombreABuscar){
-                    mostrarInformacionDispositivoBTLE(result);
-                }
-
-            }
-        };
-
-        if (!scanning) {
-            // Stops scanning after a predefined scan period.
-            handler.postDelayed(new Runnable() {
-                @SuppressLint("MissingPermission")
-                @Override
-                public void run() {
-                    scanning = false;
-                    elEscanner.stopScan(leScanCallback);
-                }
-            }, SCAN_PERIOD);
-
-            scanning = true;
-            elEscanner.startScan(leScanCallback);
-        } else {
-            scanning = false;
-            elEscanner.stopScan(leScanCallback);
-        }
-
-        Log.d(ETIQUETA_LOG,"final de buscar");
-    }
-
-    // --------------------------------------------------------------
+    // detenerBusquedaDispositivosBTLE()
+    // Descripción: Sirve para deter la busqueda de dispositivos BTLE. Aunque no hace falta del todo
+    // porque se detiene al cabo de un tiempo
     // --------------------------------------------------------------
     @SuppressLint("MissingPermission")
     private void detenerBusquedaDispositivosBTLE() {
-        if (scanning){
-            scanning=false;
-        }
+        if(this.callbackDelEscaneo==null){ return; }
+        this.elEscanner.stopScan(this.callbackDelEscaneo);
+        this.callbackDelEscaneo=null;
     } // ()
 } // class
 // -------------------------------------------------------------------------------------------------

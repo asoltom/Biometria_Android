@@ -3,9 +3,12 @@ package com.example.soler.sprint0_android_arnau;
 
 import java.util.Arrays;
 
-// -----------------------------------------------------------------------------------
-// @author: Jordi Bataller i Mascarell
-// -----------------------------------------------------------------------------------
+// -------------------------------------------------------------------------------------------------
+// @author: Arnau Soler Tomás
+// Clase: TramaIBeacon
+// Descripción: Clase de la TramaIBeacon con la que podremos crear objetos que almacenen información
+// de los beacons BTLE que detectamos en el Servicio
+// -------------------------------------------------------------------------------------------------
 public class TramaIBeacon {
     private final byte[] prefijo; // 9 bytes
     private final byte[] uuid; // 16 bytes
@@ -59,14 +62,6 @@ public class TramaIBeacon {
     // -------------------------------------------------------------------------------
     public byte getTxPower() {
         return txPower;
-    }
-
-    // -------------------------------------------------------------------------------
-    // --> getLosBytes() --> <byte>
-    // Descripción: Método que devuelve una lista de valores tipo byte, es decir, los bytes en sí de la trama iBeacon
-    // -------------------------------------------------------------------------------
-    public byte[] getLosBytes() {
-        return losBytes;
     }
 
     // -------------------------------------------------------------------------------

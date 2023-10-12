@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--Estube teniendo problemas de seguridad con la IP, el localhost, etc; y al final cree este .xml para setear unas normas de seguridad en la red-->
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">nikit19.github.io</domain>
+    </domain-config>
+</network-security-config>

@@ -11,22 +11,22 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 
 import com.ingenieriajhr.blujhr.BluJhr;
 
 // -------------------------------------------------------------------------------------------------
+// @author: Arnau Soler Tomás
+// Clase: MainActivity
+// Descripción: Clase inicial de la App
 // -------------------------------------------------------------------------------------------------
 public class MainActivity extends AppCompatActivity {
     // ---------------------------------------------------------------------------------------------
    // Variables y Constantes Globales
     private static final String ETIQUETA_LOG = ">>>>";
     private Intent elIntentDelServicio = null;
-
-    private final String nuestraEmisora ="GTI-3A";
-    private final String nuestraUUID = "EPSG-GTI-PROY-3A";
 
     //Bluetooth y Beacons
     BluJhr blue;
@@ -93,10 +93,12 @@ public class MainActivity extends AppCompatActivity {
     //----------------------------------------------------------------------------------------------
     //  requestCode:N, permissions:<String>, grantResults:<N> --> onRequestPermissionsResult() --> void
     //----------------------------------------------------------------------------------------------
+    @RequiresApi(api = Build.VERSION_CODES.S)
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-
+        //-----------------------------------------------------------------------------------------------------------------------
         //Pedir permiso de Bluetooth
+        //-----------------------------------------------------------------------------------------------------------------------
         if (blue.checkPermissions(requestCode,grantResults)){
             blue.initializeBluetooth();
         }else{
@@ -120,14 +122,34 @@ public class MainActivity extends AppCompatActivity {
             ActivityCompat.requestPermissions(MainActivity.this,
                     new String[]{Manifest.permission.BLUETOOTH_ADVERTISE}, 1122);
         }
-
+        //-----------------------------------------------------------------------------------------------------------------------
         //Pedir permiso de Localización
+        //-----------------------------------------------------------------------------------------------------------------------
         int lperm = ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_COARSE_LOCATION);
 
         if(lperm!= PackageManager.PERMISSION_GRANTED){
             ActivityCompat.requestPermissions(MainActivity.this,
                     new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, 1122);
         }
+        //-----------------------------------------------------------------------------------------------------------------------
+        //Pedir permiso de Internet
+        //-----------------------------------------------------------------------------------------------------------------------
+        int intperm = ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.INTERNET);
+
+        if(intperm!= PackageManager.PERMISSION_GRANTED){
+            ActivityCompat.requestPermissions(MainActivity.this,
+                    new String[]{Manifest.permission.INTERNET}, 1122);
+        }
+        //-----------------------------------------------------------------------------------------------------------------------
+        //Pedir permiso de Network
+        //-----------------------------------------------------------------------------------------------------------------------
+        int netperm = ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_NETWORK_STATE);
+
+        if(netperm!= PackageManager.PERMISSION_GRANTED){
+            ActivityCompat.requestPermissions(MainActivity.this,
+                    new String[]{Manifest.permission.ACCESS_NETWORK_STATE}, 1122);
+        }
+
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
@@ -145,48 +167,4 @@ public class MainActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
     }
 
-
-
-    // --------------------------------------------------------------
-    // --------------------------------------------------------------
-//    private void buscarEsteDispositivoBTLE(final String dispositivoBuscado) {
-//        Log.d(ETIQUETA_LOG, " buscarEsteDispositivoBTLE(): empieza ");
-//
-//        Log.d(ETIQUETA_LOG, "  buscarEsteDispositivoBTLE(): instalamos scan callback ");
-//
-//
-//        // super.onScanResult(ScanSettings.SCAN_MODE_LOW_LATENCY, result); para ahorro de energía
-//
-//        this.callbackDelEscaneo = new ScanCallback() {
-//            @Override
-//            public void onScanResult(int callbackType, ScanResult resultado) {
-//                super.onScanResult(callbackType, resultado);
-//                Log.d(ETIQUETA_LOG, "  buscarEsteDispositivoBTLE(): onScanResult() ");
-//
-//                mostrarInformacionDispositivoBTLE(resultado);
-//            }
-//
-//            @Override
-//            public void onBatchScanResults(List<ScanResult> results) {
-//                super.onBatchScanResults(results);
-//                Log.d(ETIQUETA_LOG, "  buscarEsteDispositivoBTLE(): onBatchScanResults() ");
-//
-//            }
-//
-//            @Override
-//            public void onScanFailed(int errorCode) {
-//                super.onScanFailed(errorCode);
-//                Log.d(ETIQUETA_LOG, "  buscarEsteDispositivoBTLE(): onScanFailed() ");
-//
-//            }
-//        };
-//
-//        Log.d(ETIQUETA_LOG, "  buscarEsteDispositivoBTLE(): empezamos a escanear buscando: " + dispositivoBuscado);
-//
-//        this.elEscanner.startScan(this.callbackDelEscaneo);
-//        Log.d(ETIQUETA_LOG,"final de buscar");
-//    } // ()
-
-    // --------------------------------------------------------------
-    // --------------------------------------------------------------
 } // class MainActivity()
